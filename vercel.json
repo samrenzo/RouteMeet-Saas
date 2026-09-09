@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/precompute-routes",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/daily-summary",
+      "schedule": "30 6 * * *"
+    },
+    {
+      "path": "/api/cron/reminders",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/reset-booking-counts",
+      "schedule": "0 0 1 * *"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  RouteMeet design tokens.
+  Concept: a wayfinding palette — warm paper background (like a printed
+  route sheet), a deep pine-teal "route line" as primary, and an amber
+  "waypoint" accent for markers/numbers. Sharp corners on data/list
+  elements (timetables, tables); soft corners on interactive controls
+  (buttons, inputs, cards) so the two read as distinct affordances.
+*/
+
+@layer base {
+  :root {
+    --background: 45 33% 97%;
+    --foreground: 222 22% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 22% 12%;
+
+    --primary: 165 35% 24%;
+    --primary-foreground: 40 33% 97%;
+
+    --secondary: 36 30% 92%;
+    --secondary-foreground: 222 22% 12%;
+
+    --muted: 40 20% 93%;
+    --muted-foreground: 220 9% 40%;
+
+    --accent: 35 78% 56%;
+    --accent-foreground: 222 30% 12%;
+
+    --destructive: 6 74% 45%;
+    --destructive-foreground: 40 33% 97%;
+
+    --border: 40 15% 85%;
+    --input: 40 15% 85%;
+    --ring: 165 35% 24%;
+
+    --radius: 0.625rem;
+
+    --font-sans: "Plex", ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Route-line timeline used on the dashboard's daily booking list.
+   Deliberate motif: a vertical line with numbered waypoint dots,
+   because the content genuinely is a time-ordered sequence of stops. */
+.route-timeline {
+  position: relative;
+}
+.route-timeline::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: hsl(var(--border));
+}
+.route-dot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.route-dot[data-status="pending"] {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+.route-dot[data-status="cancelled"] {
+  background: transparent;
+  border: 2px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+}

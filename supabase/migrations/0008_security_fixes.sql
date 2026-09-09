@@ -1,0 +1,37 @@
+-- RouteMeet — security fixes found during a full-codebase review after
+-- Phase 8. Two related problems, same root cause: Postgres RLS is
+-- row-level, not column-level, so "anyone can read this row" necessarily
+-- means "anyone can read every column of this row" — there is no way to
+-- expose just `name`/`slug` via RLS alone.
+--
+-- Problem 1 (data exposure): businesses' old public SELECT policy used
+-- `using (true)`, intended only so the public booking page could look up
+-- a business by slug. In practice it let anyone holding the public
+-- NEXT_PUBLIC_SUPABASE_ANON_KEY — which is, by definition, embedded in
+-- every page's client bundle — query the `businesses` table directly
+-- (bypassing the app entirely) and read `google_refresh_token`,
+-- `stripe_customer_id`, `stripe_subscription_id`, `owner_phone`, and
+-- `owner_email` for every business, not just `name`/`slug`.
+--
+-- Problem 2 (silent functional breakage): the app's own server-side code
+-- for the public booking page and booking-creation action was, until this
+-- pass, using the regular cookie-based (anon-role) Supabase client for
+-- reads that have NO anon-role policy at all: reading existing `bookings`
+-- to exclude already-taken slots, and inserting/updating `clients` for
+-- CRM dedupe. Under RLS this doesn't error — it just silently returns zero
+-- rows / denies the write — which meant double-booking prevention did
+-- nothing, and every real (non-owner) booking submission would have
+-- thrown trying to create/update the client record.
+--
+-- The fix for both is the same: the app's public-facing pages/actions now
+-- use the SERVICE ROLE client (which bypasses RLS entirely, safely, since
+-- it never runs in the browser) for every read/write an anonymous visitor
+-- legitimately needs, and this migration removes the public policy that
+-- used to paper over problem 2 while causing problem 1.
+drop policy if exists "Public can read businesses for booking pages" on businesses;
+
+-- business_hours' public read policy is left as-is deliberately — day/time
+-- windows aren't sensitive, and removing it wouldn't improve security,
+-- only add churn (the app's own code has also moved to service role for
+-- its public reads here, but there's no reason to forbid a future
+-- lightweight public widget from using this table directly).
